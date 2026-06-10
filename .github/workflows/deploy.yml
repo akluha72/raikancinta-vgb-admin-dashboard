@@ -120,9 +120,12 @@ jobs:
 
       - name: Rebuild caches on server
         run: |
+          # Create the public/storage symlink directly. Hostinger disables
+          # exec(), so `php artisan storage:link` fails there — ln -s does the
+          # same job. Idempotent: only links if it's not already present.
           ssh deploy-target \
             "cd ${{ secrets.DEPLOY_PATH }} && \
-             php artisan storage:link || true && \
+             [ -e public/storage ] || ln -s \"\$(pwd)/storage/app/public\" public/storage && \
              php artisan config:cache && \
              php artisan route:cache && \
              php artisan view:cache"
