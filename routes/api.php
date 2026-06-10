@@ -27,3 +27,10 @@ Route::post('/events/{event}/verify-pin', [GalleryController::class, 'verifyPin'
 Route::get('/events/{event}/submissions', [GalleryController::class, 'index'])
     ->middleware('gallery.token')
     ->name('api.gallery.index');
+
+// Public live-wall feed for the guest app — NO PIN. Anyone with the event
+// slug (it's in the QR) can read every submission. Throttled to absorb the
+// polling the guest app does during a live event.
+Route::get('/events/{event}/feed', [GalleryController::class, 'feed'])
+    ->middleware('throttle:60,1')
+    ->name('api.gallery.feed');

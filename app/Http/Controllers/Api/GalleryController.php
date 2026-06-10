@@ -43,14 +43,42 @@ class GalleryController extends Controller
     }
 
     /**
-     * Return this event's approved submissions, paginated. Reached only after
-     * the gallery.token middleware has validated an event-scoped token, so the
+     * Return this event's submissions, paginated. Reached only after the
+     * gallery.token middleware has validated an event-scoped token, so the
      * caller is proven to hold the PIN for exactly this event.
+     *
+     * Used by the PIN-protected gallery app (gallery-vgb.raikancinta.com).
      */
     public function index(Request $request, Event $event): JsonResponse
     {
+        return $this->paginatedSubmissions($event);
+    }
+
+    /**
+     * Public live-wall feed: the same submissions as index(), but with NO PIN
+     * gate. Anyone holding the event slug (it's in the guest-app QR) can read
+     * it, so the guest app at vgb2.raikancinta.com can show every submission as
+     * it arrives. Throttled at the route level to absorb live-event polling.
+     *
+     * This intentionally exposes all of an event's submissions publicly; the
+     * slug is the only thing protecting them. Keep the PIN-gated index() for
+     * the separate gallery app.
+     */
+    public function feed(Request $request, Event $event): JsonResponse
+    {
+        return $this->paginatedSubmissions($event);
+    }
+
+    /**
+     * Shared listing used by both the PIN-gated gallery and the public feed.
+     *
+     * Moderation is disabled for now — all submissions are returned. When the
+     * approval workflow is re-enabled, add ->where('status', 'approved') here
+     * (submissions are currently stored as 'approved' on arrival).
+     */
+    private function paginatedSubmissions(Event $event): JsonResponse
+    {
         $entries = $event->entries()
-            ->where('status', 'approved')
             ->latest('created_at')
             ->paginate(20);
 

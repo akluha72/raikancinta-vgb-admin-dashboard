@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Shapes a single approved guestbook entry for the gallery. File URLs are
+ * Shapes a single guestbook entry for the gallery. File URLs are
  * resolved at read time from the stored relative paths — raw storage paths
  * are never exposed. On cloud disks we mint short-lived signed URLs.
  *
