@@ -62,12 +62,36 @@ jobs:
       #     php artisan key:generate
       #     php artisan test
 
+      - name: Check required secrets
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          missing=0
+          for name in SSH_PRIVATE_KEY SSH_HOST SSH_USER SSH_PORT DEPLOY_PATH; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Repository secret '$name' is empty or not set."
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            echo "Add the missing secrets under Settings → Secrets and variables → Actions → Repository secrets."
+            exit 1
+          fi
+
       - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${{ secrets.SSH_PORT }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Deploy with rsync
         run: |
