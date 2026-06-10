@@ -75,18 +75,11 @@
             {{-- Submission summary --}}
             <div>
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Submissions</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    @foreach ([
-                        ['Total', $counts['total'], 'text-gray-900 dark:text-gray-100'],
-                        ['Pending', $counts['pending'], 'text-amber-600 dark:text-amber-400'],
-                        ['Approved', $counts['approved'], 'text-green-600 dark:text-green-400'],
-                        ['Binned', $counts['binned'], 'text-gray-500 dark:text-gray-400'],
-                    ] as [$label, $value, $color])
-                        <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-5">
-                            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ $label }}</div>
-                            <div class="mt-1 text-3xl font-semibold {{ $color }} tabular-nums">{{ $value }}</div>
-                        </div>
-                    @endforeach
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-5">
+                        <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</div>
+                        <div class="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100 tabular-nums">{{ $total }}</div>
+                    </div>
                 </div>
             </div>
 

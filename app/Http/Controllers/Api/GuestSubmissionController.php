@@ -51,7 +51,10 @@ class GuestSubmissionController extends Controller
                     'audio' => $audioPath,
                     'photo' => $photoPath,
                     'guest_message' => $request->validated('guest_message'),
-                    'status' => 'pending',
+                    // Moderation is disabled for now — submissions go live on
+                    // arrival. The status column is retained so the
+                    // pending/approved/binned workflow can be re-enabled later.
+                    'status' => 'approved',
                 ]);
             });
         } catch (\Throwable $e) {

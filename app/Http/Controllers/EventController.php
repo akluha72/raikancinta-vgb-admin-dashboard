@@ -73,23 +73,15 @@ class EventController extends Controller
      */
     public function show(Event $event): View
     {
-        // Counts grouped by status in a single query (no per-status round-trips).
-        $byStatus = GuestbookEntry::query()
+        // Moderation is disabled for now, so only the total submission count is
+        // shown. The per-status breakdown can return when approval is re-enabled.
+        $total = (int) GuestbookEntry::query()
             ->where('event_id', $event->id)
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        $counts = [
-            'total' => (int) $byStatus->sum(),
-            'pending' => (int) $byStatus->get('pending', 0),
-            'approved' => (int) $byStatus->get('approved', 0),
-            'binned' => (int) $byStatus->get('binned', 0),
-        ];
+            ->count();
 
         return view('events.show', [
             'event' => $event,
-            'counts' => $counts,
+            'total' => $total,
             'guestUrl' => $this->qr->guestUrl($event),
             'galleryUrl' => rtrim(config('guestbook.gallery_base_url'), '/').'/'.$event->slug,
             // Inline SVG QR for the guest submission URL (rendered with {!! !!}).
