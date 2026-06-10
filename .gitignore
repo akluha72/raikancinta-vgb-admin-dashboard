@@ -19,6 +19,11 @@
 /storage/*.key
 /storage/pail
 /vendor
+
+# SSH deploy keys — never commit
+hostinger_deploy
+hostinger_deploy.pub
+*.pem
 Homestead.json
 Homestead.yaml
 Thumbs.db
