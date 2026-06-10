@@ -22,14 +22,14 @@ class EventQrService
 {
     /**
      * The guest submission URL encoded by the event's QR.
-     * {GUEST_APP_BASE_URL}/{slug} — the slug never changes, so the QR stays
-     * valid for the life of the event.
+     * {GUEST_APP_BASE_URL}/?event={slug} — the slug never changes, so the QR
+     * stays valid for the life of the event.
      */
     public function guestUrl(Event $event): string
     {
         $base = Config::get('guestbook.guest_app_base_url');
 
-        return rtrim((string) $base, '/').'/'.$event->slug;
+        return rtrim((string) $base, '/').'/?event='.urlencode($event->slug);
     }
 
     /**
