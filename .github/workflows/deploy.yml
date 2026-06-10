@@ -91,19 +91,36 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Per-host SSH config so rsync + ssh share the key, port, and options.
+          cat > ~/.ssh/config <<EOF
+          Host deploy-target
+            HostName $SSH_HOST
+            User ${{ secrets.SSH_USER }}
+            Port $SSH_PORT
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking accept-new
+          EOF
+          chmod 600 ~/.ssh/config
+
+          # Best-effort known_hosts seed. Must not abort the job if Hostinger
+          # doesn't answer keyscan — StrictHostKeyChecking=accept-new covers us.
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          # Fail loudly here (not mid-deploy) if auth/connectivity is wrong.
+          ssh -o ConnectTimeout=15 deploy-target 'echo "SSH OK on $(hostname)"; php -v | head -n1'
 
       - name: Deploy with rsync
         run: |
           rsync -azr --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }}" \
+            -e "ssh" \
             --exclude-from='.deploy-excludes' \
-            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+            ./ "deploy-target:${{ secrets.DEPLOY_PATH }}/"
 
       - name: Rebuild caches on server
         run: |
-          ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT }}" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+          ssh deploy-target \
             "cd ${{ secrets.DEPLOY_PATH }} && \
              php artisan storage:link || true && \
              php artisan config:cache && \
