@@ -1,0 +1,87 @@
+name: Deploy to Hostinger
+
+# Build the Laravel app on CI (shared hosting can't reliably run composer/npm),
+# then ship the finished artifact to Hostinger over SSH/rsync.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   SSH_PRIVATE_KEY  - private key whose public half is in Hostinger ~/.ssh/authorized_keys
+#   SSH_HOST         - e.g. 123.45.67.89  (or your domain)
+#   SSH_USER         - Hostinger SSH username (shown in hPanel → Advanced → SSH Access)
+#   SSH_PORT         - Hostinger SSH port (shared is usually 65002)
+#   DEPLOY_PATH      - absolute path on the server, e.g. /home/u123456789/domains/vgb2.raikancinta.com/admin
+#
+# Migrations are NOT run automatically. After a deploy that needs them, run by hand:
+#   ssh -p <port> <user>@<host> "cd <DEPLOY_PATH> && php artisan migrate --force"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false   # never interrupt an in-flight deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, gd, pdo_mysql, zip
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Install & build frontend
+        run: |
+          npm ci
+          npm run build
+
+      # Optional gate: uncomment to block deploys when tests fail. Runs against
+      # an sqlite in-memory DB so it needs no server credentials.
+      # - name: Run tests
+      #   env:
+      #     DB_CONNECTION: sqlite
+      #     DB_DATABASE: ':memory:'
+      #   run: |
+      #     cp .env.example .env
+      #     php artisan key:generate
+      #     php artisan test
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.SSH_PORT }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy with rsync
+        run: |
+          rsync -azr --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }}" \
+            --exclude-from='.deploy-excludes' \
+            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      - name: Rebuild caches on server
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd ${{ secrets.DEPLOY_PATH }} && \
+             php artisan storage:link || true && \
+             php artisan config:cache && \
+             php artisan route:cache && \
+             php artisan view:cache"

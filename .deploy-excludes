@@ -1,0 +1,32 @@
+# Paths rsync must NOT push to the server. These are either server-owned
+# (live secrets, uploaded files) or irrelevant to a running production app.
+# Note: public/build and vendor are NOT excluded — CI builds them and they
+# must ship, even though they are gitignored locally.
+
+.git
+.github
+.gitignore
+.gitattributes
+.editorconfig
+
+# Server owns the live environment + key. Never overwrite.
+.env
+.env.example
+.env.backup
+.env.production
+
+# User uploads and runtime state live on the server.
+storage/app
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+storage/logs
+public/storage
+
+# Dev-only — not needed in production.
+node_modules
+tests
+.deploy-excludes
+phpunit.xml
+README.md
+*.md
