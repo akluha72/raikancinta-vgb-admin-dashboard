@@ -83,7 +83,7 @@ class EventController extends Controller
             'event' => $event,
             'total' => $total,
             'guestUrl' => $this->qr->guestUrl($event),
-            'galleryUrl' => rtrim(config('guestbook.gallery_base_url'), '/').'/'.$event->slug,
+            'galleryUrl' => rtrim(config('guestbook.gallery_base_url'), '/').'/?event='.urlencode($event->slug),
             // Inline SVG QR for the guest submission URL (rendered with {!! !!}).
             'qrSvg' => $this->qr->render($event, 'svg', 240),
         ]);
