@@ -47,7 +47,7 @@ class GalleryController extends Controller
      * gallery.token middleware has validated an event-scoped token, so the
      * caller is proven to hold the PIN for exactly this event.
      *
-     * Used by the PIN-protected gallery app (gallery-vgb.raikancinta.com).
+     * Used by the PIN-protected gallery app (vgb-gallery.raikancinta.com).
      */
     public function index(Request $request, Event $event): JsonResponse
     {

@@ -15,7 +15,7 @@ return [
 
     'guest_app_base_url' => env('GUEST_APP_BASE_URL', 'https://vgb2.raikancinta.com'),
 
-    'gallery_base_url' => env('GALLERY_BASE_URL', 'https://gallery-vgb.raikancinta.com'),
+    'gallery_base_url' => env('GALLERY_BASE_URL', 'https://vgb-gallery.raikancinta.com'),
 
     /*
     |--------------------------------------------------------------------------
