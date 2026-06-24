@@ -4,10 +4,10 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreEventRequest extends FormRequest
+class UpdateEventRequest extends FormRequest
 {
     /**
-     * Any authenticated owner may create an event (single-owner MVP).
+     * Any authenticated owner may edit an event (single-owner MVP).
      * Route-level `auth` middleware already gates access.
      */
     public function authorize(): bool
@@ -16,8 +16,9 @@ class StoreEventRequest extends FormRequest
     }
 
     /**
-     * Validation rules for creating an event. Slug and PIN are generated
-     * server-side and are intentionally not accepted from input.
+     * Validation rules for editing an event. Slug and PIN are managed
+     * elsewhere and are intentionally not accepted here. The media files are
+     * optional on update — omitting one leaves the existing file untouched.
      *
      * @return array<string, mixed>
      */
@@ -28,9 +29,6 @@ class StoreEventRequest extends FormRequest
             'wedding_date' => ['nullable', 'date'],
             'plan_tier' => ['nullable', 'in:basic,premium'],
 
-            // Couple photo + greeting audio are both optional and may be added
-            // later from the dashboard. mimetypes checks real content, not just
-            // the extension. Sizes match the guest-submission limits.
             'couple_photo' => [
                 'nullable',
                 'file',
@@ -59,10 +57,6 @@ class StoreEventRequest extends FormRequest
         ];
     }
 
-    /**
-     * Normalise input before validation: default the plan tier to "basic"
-     * and trim the couple name.
-     */
     protected function prepareForValidation(): void
     {
         $this->merge([

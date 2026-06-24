@@ -8,6 +8,10 @@
                 </h2>
                 <x-status-badge :status="$event->status" />
             </div>
+            <a href="{{ route('events.edit', $event) }}"
+               class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                Edit event
+            </a>
         </div>
     </x-slot>
 
@@ -129,6 +133,34 @@
                     <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
                         The PIN protects gallery access. Resetting invalidates the previous code.
                     </p>
+                </div>
+            </div>
+
+            {{-- Couple photo + greeting audio (shown on the guest app) --}}
+            <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Guest app media</h3>
+                    <a href="{{ route('events.edit', $event) }}"
+                       class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">Edit</a>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Couple photo</div>
+                        @if ($event->couple_photo_url)
+                            <img src="{{ $event->couple_photo_url }}" alt="Couple photo"
+                                 class="h-40 w-40 rounded-md object-cover border border-gray-200 dark:border-gray-700" />
+                        @else
+                            <p class="text-sm text-gray-400 dark:text-gray-500">No photo uploaded.</p>
+                        @endif
+                    </div>
+                    <div>
+                        <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Greeting audio</div>
+                        @if ($event->greeting_audio_url)
+                            <audio controls src="{{ $event->greeting_audio_url }}" class="w-full"></audio>
+                        @else
+                            <p class="text-sm text-gray-400 dark:text-gray-500">No audio uploaded.</p>
+                        @endif
+                    </div>
                 </div>
             </div>
 

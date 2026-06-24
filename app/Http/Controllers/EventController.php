@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEventRequest;
+use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
 use App\Models\GuestbookEntry;
 use App\Services\EventCredentialGenerator;
@@ -10,6 +11,10 @@ use App\Services\EventQrService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class EventController extends Controller
@@ -63,9 +68,92 @@ class EventController extends Controller
             'gallery_pin' => $this->credentials->galleryPin(),
         ]);
 
+        // Files are namespaced by the event id, so they're stored after the
+        // row exists. Persist the relative paths back onto the event.
+        $media = [];
+        if ($request->hasFile('couple_photo')) {
+            $media['couple_photo'] = $this->storeMedia($request->file('couple_photo'), $event->id, 'photos');
+        }
+        if ($request->hasFile('greeting_audio')) {
+            $media['greeting_audio'] = $this->storeMedia($request->file('greeting_audio'), $event->id, 'audio');
+        }
+        if ($media !== []) {
+            $event->update($media);
+        }
+
         return redirect()
             ->route('events.show', $event)
             ->with('status', "Event \"{$event->couple_name}\" created.");
+    }
+
+    /**
+     * Show the edit-event form.
+     */
+    public function edit(Event $event): View
+    {
+        return view('events.edit', ['event' => $event]);
+    }
+
+    /**
+     * Update an event's details and, optionally, its couple photo / greeting
+     * audio. Uploading a new file replaces and deletes the old one; omitting a
+     * file leaves the existing media untouched.
+     */
+    public function update(UpdateEventRequest $request, Event $event): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $attributes = [
+            'couple_name' => $data['couple_name'],
+            'wedding_date' => $data['wedding_date'] ?? null,
+            'plan_tier' => $data['plan_tier'],
+        ];
+
+        $disk = Config::get('guestbook.disk', 'public');
+
+        if ($request->hasFile('couple_photo')) {
+            $attributes['couple_photo'] = $this->storeMedia($request->file('couple_photo'), $event->id, 'photos');
+        }
+        if ($request->hasFile('greeting_audio')) {
+            $attributes['greeting_audio'] = $this->storeMedia($request->file('greeting_audio'), $event->id, 'audio');
+        }
+
+        // Capture the paths being replaced so we can delete them after the
+        // update succeeds (avoids orphaned files on the disk).
+        $oldPhoto = $event->couple_photo;
+        $oldAudio = $event->greeting_audio;
+
+        $event->update($attributes);
+
+        if (isset($attributes['couple_photo']) && $oldPhoto && $oldPhoto !== $attributes['couple_photo']) {
+            Storage::disk($disk)->delete($oldPhoto);
+        }
+        if (isset($attributes['greeting_audio']) && $oldAudio && $oldAudio !== $attributes['greeting_audio']) {
+            Storage::disk($disk)->delete($oldAudio);
+        }
+
+        return redirect()
+            ->route('events.show', $event)
+            ->with('status', 'Event updated.');
+    }
+
+    /**
+     * Store an event-level media upload under an event-namespaced path and
+     * return the relative path stored in the DB:
+     * events/{event_id}/event-{kind}/{uuid}.{ext}
+     *
+     * Kept separate from guest submissions so editing event media never
+     * touches guest uploads.
+     */
+    private function storeMedia(UploadedFile $file, int $eventId, string $kind): string
+    {
+        $disk = Config::get('guestbook.disk', 'public');
+
+        // Trust the detected extension over the client-supplied filename.
+        $ext = $file->extension() ?: $file->getClientOriginalExtension();
+        $name = Str::uuid().'.'.$ext;
+
+        return $file->storeAs("events/{$eventId}/event-{$kind}", $name, ['disk' => $disk]);
     }
 
     /**

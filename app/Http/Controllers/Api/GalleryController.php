@@ -87,6 +87,8 @@ class GalleryController extends Controller
             'event' => [
                 'couple_name' => $event->couple_name,
                 'wedding_date' => $event->wedding_date?->toDateString(),
+                'couple_photo_url' => $event->couple_photo_url,
+                'greeting_audio_url' => $event->greeting_audio_url,
             ],
             'data' => SubmissionResource::collection($entries)->resolve(),
             'meta' => [

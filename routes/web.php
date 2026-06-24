@@ -18,6 +18,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+    Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
+    Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::get('/events/{event}/qr', [EventController::class, 'qr'])->name('events.qr');
     Route::post('/events/{event}/reset-pin', [EventController::class, 'resetPin'])->name('events.reset-pin');
 

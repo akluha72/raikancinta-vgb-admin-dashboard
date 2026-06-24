@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 
 class Event extends Model
 {
@@ -26,6 +28,19 @@ class Event extends Model
         'wedding_date',
         'gallery_pin',
         'plan_tier',
+        'couple_photo',
+        'greeting_audio',
+    ];
+
+    /**
+     * Append the resolved public media URLs to array/JSON output so the guest
+     * app (vgb2) receives couple_photo_url / greeting_audio_url directly.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'couple_photo_url',
+        'greeting_audio_url',
     ];
 
     /**
@@ -41,6 +56,46 @@ class Event extends Model
     public function entries(): HasMany
     {
         return $this->hasMany(GuestbookEntry::class);
+    }
+
+    /**
+     * Public URL for the couple photo, resolved at read time from the stored
+     * relative path. Null when no photo is set.
+     */
+    protected function couplePhotoUrl(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->resolveMediaUrl($this->couple_photo));
+    }
+
+    /**
+     * Public URL for the greeting audio, resolved at read time. Null when unset.
+     */
+    protected function greetingAudioUrl(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->resolveMediaUrl($this->greeting_audio));
+    }
+
+    /**
+     * Turn a stored relative path into a usable URL. Mirrors
+     * SubmissionResource: a temporary signed URL on cloud disks (S3/R2),
+     * falling back to a permanent public URL on the local/public disk.
+     */
+    private function resolveMediaUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        $disk = Storage::disk(Config::get('guestbook.disk', 'public'));
+
+        try {
+            return $disk->temporaryUrl(
+                $path,
+                now()->addSeconds((int) Config::get('guestbook.token_ttl', 3600))
+            );
+        } catch (\Throwable) {
+            return $disk->url($path);
+        }
     }
 
     /**
