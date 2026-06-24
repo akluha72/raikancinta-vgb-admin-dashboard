@@ -1,9 +1,40 @@
+# CORS for cross-origin media under /storage/ (audio + photos). The guest app
+# (vgb2) and gallery app are separate origins, so the browser needs these
+# headers to read audio data for the waveform visualizer and to range-stream.
+# We echo back the request Origin only when it's on the allowlist (never "*",
+# which breaks range/credentialed media requests). Keep Accept-Ranges working.
+#
+# Scoped with SetEnvIf (Apache + LiteSpeed compatible — avoids <If>, which
+# LiteSpeed honours inconsistently): the headers fire only when BOTH the path
+# is under /storage/ AND the Origin is allowlisted. App/API responses are
+# untouched (Laravel's config/cors.php handles those).
+<IfModule mod_headers.c>
+    <IfModule mod_setenvif.c>
+        SetEnvIf Request_URI "^/storage/" CORS_STORAGE_PATH=1
+        SetEnvIf Origin "^https://(vgb2|gallery-vgb)\.raikancinta\.com$" CORS_ORIGIN=$0
+    </IfModule>
+
+    Header always set Access-Control-Allow-Origin "%{CORS_ORIGIN}e" "expr=reqenv('CORS_STORAGE_PATH') == '1' && reqenv('CORS_ORIGIN') != ''"
+    Header always set Access-Control-Allow-Methods "GET, HEAD, OPTIONS" "expr=reqenv('CORS_STORAGE_PATH') == '1' && reqenv('CORS_ORIGIN') != ''"
+    Header always set Access-Control-Allow-Headers "Range" "expr=reqenv('CORS_STORAGE_PATH') == '1' && reqenv('CORS_ORIGIN') != ''"
+    Header always set Access-Control-Expose-Headers "Content-Length, Content-Range, Accept-Ranges" "expr=reqenv('CORS_STORAGE_PATH') == '1' && reqenv('CORS_ORIGIN') != ''"
+    # Vary on Origin so a cached response isn't reused for a different origin.
+    Header merge Vary "Origin" "expr=reqenv('CORS_STORAGE_PATH') == '1'"
+    Header always set Accept-Ranges "bytes" "expr=reqenv('CORS_STORAGE_PATH') == '1'"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # Short-circuit CORS preflight (OPTIONS) for storage media with a 204 so
+    # the browser gets the headers above without hitting the PHP front controller.
+    RewriteCond %{REQUEST_METHOD} =OPTIONS
+    RewriteCond %{REQUEST_URI} ^/storage/
+    RewriteRule ^ - [R=204,L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

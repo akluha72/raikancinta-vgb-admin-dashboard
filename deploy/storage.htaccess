@@ -1,0 +1,24 @@
+# CORS for cross-origin media served under /storage/ (audio + photos).
+#
+# This file is installed into the server's storage/app/public/ directory by the
+# deploy workflow (that directory is server-owned and excluded from rsync, so it
+# can't ship directly). It is a per-directory belt-and-suspenders companion to
+# the rule in public/.htaccess: some LiteSpeed/Apache static-file handlers honour
+# the .htaccess that sits *in* the served directory more reliably than a parent's.
+#
+# The guest app (vgb2) and gallery app are separate origins; the browser needs
+# these headers to read audio data for the waveform visualizer and to
+# range-stream. We echo back the request Origin only when it's allowlisted
+# (never "*", which breaks range/credentialed media requests).
+<IfModule mod_headers.c>
+    <IfModule mod_setenvif.c>
+        SetEnvIf Origin "^https://(vgb2|gallery-vgb)\.raikancinta\.com$" CORS_ORIGIN=$0
+    </IfModule>
+
+    Header always set Access-Control-Allow-Origin "%{CORS_ORIGIN}e" env=CORS_ORIGIN
+    Header always set Access-Control-Allow-Methods "GET, HEAD, OPTIONS" env=CORS_ORIGIN
+    Header always set Access-Control-Allow-Headers "Range" env=CORS_ORIGIN
+    Header always set Access-Control-Expose-Headers "Content-Length, Content-Range, Accept-Ranges" env=CORS_ORIGIN
+    Header merge Vary "Origin"
+    Header always set Accept-Ranges "bytes"
+</IfModule>
