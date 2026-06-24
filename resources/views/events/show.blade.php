@@ -101,6 +101,10 @@
                             <dd class="text-gray-900 dark:text-gray-100">{{ $event->wedding_date?->format('Y-m-d') ?? '—' }}</dd>
                         </div>
                         <div class="flex justify-between py-2">
+                            <dt class="text-gray-500 dark:text-gray-400">Venue</dt>
+                            <dd class="text-gray-900 dark:text-gray-100">{{ $event->venue ?? '—' }}</dd>
+                        </div>
+                        <div class="flex justify-between py-2">
                             <dt class="text-gray-500 dark:text-gray-400">Plan tier</dt>
                             <dd class="text-gray-900 dark:text-gray-100 capitalize">{{ $event->plan_tier }}</dd>
                         </div>

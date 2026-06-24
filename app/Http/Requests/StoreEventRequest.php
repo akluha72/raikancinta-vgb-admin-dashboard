@@ -26,6 +26,7 @@ class StoreEventRequest extends FormRequest
         return [
             'couple_name' => ['required', 'string', 'max:150'],
             'wedding_date' => ['nullable', 'date'],
+            'venue' => ['nullable', 'string', 'max:255'],
             'plan_tier' => ['nullable', 'in:basic,premium'],
 
             // Couple photo + greeting audio are both optional and may be added

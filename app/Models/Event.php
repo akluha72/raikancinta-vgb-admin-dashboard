@@ -26,6 +26,7 @@ class Event extends Model
         'slug',
         'couple_name',
         'wedding_date',
+        'venue',
         'gallery_pin',
         'plan_tier',
         'couple_photo',

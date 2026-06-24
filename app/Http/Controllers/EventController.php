@@ -63,6 +63,7 @@ class EventController extends Controller
         $event = Event::create([
             'couple_name' => $data['couple_name'],
             'wedding_date' => $data['wedding_date'] ?? null,
+            'venue' => $data['venue'] ?? null,
             'plan_tier' => $data['plan_tier'],
             'slug' => $this->credentials->uniqueSlug($data['couple_name']),
             'gallery_pin' => $this->credentials->galleryPin(),
@@ -106,6 +107,7 @@ class EventController extends Controller
         $attributes = [
             'couple_name' => $data['couple_name'],
             'wedding_date' => $data['wedding_date'] ?? null,
+            'venue' => $data['venue'] ?? null,
             'plan_tier' => $data['plan_tier'],
         ];
 

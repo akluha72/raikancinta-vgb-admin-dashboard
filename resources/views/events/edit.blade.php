@@ -35,15 +35,14 @@
                         <x-input-error :messages="$errors->get('wedding_date')" class="mt-2" />
                     </div>
 
-                    {{-- Plan tier --}}
+                    {{-- Venue (optional) --}}
                     <div>
-                        <x-input-label for="plan_tier" :value="__('Plan tier')" />
-                        <select id="plan_tier" name="plan_tier"
-                                class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="basic" @selected(old('plan_tier', $event->plan_tier) === 'basic')>Basic</option>
-                            <option value="premium" @selected(old('plan_tier', $event->plan_tier) === 'premium')>Premium</option>
-                        </select>
-                        <x-input-error :messages="$errors->get('plan_tier')" class="mt-2" />
+                        <x-input-label for="venue" :value="__('Venue (optional)')" />
+                        <x-text-input id="venue" name="venue" type="text"
+                                      class="mt-1 block w-full"
+                                      :value="old('venue', $event->venue)"
+                                      placeholder="e.g. The Grand Ballroom, Kuala Lumpur" />
+                        <x-input-error :messages="$errors->get('venue')" class="mt-2" />
                     </div>
 
                     {{-- Couple photo --}}
@@ -79,6 +78,17 @@
                                class="mt-1 block w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 dark:file:bg-gray-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 dark:file:text-gray-100 hover:file:bg-indigo-100 dark:hover:file:bg-gray-600" />
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">MP3, WAV, M4A, WebM, or OGG. Max 20MB. Leave empty to keep the current audio.</p>
                         <x-input-error :messages="$errors->get('greeting_audio')" class="mt-2" />
+                    </div>
+
+                    {{-- Plan tier --}}
+                    <div>
+                        <x-input-label for="plan_tier" :value="__('Plan tier')" />
+                        <select id="plan_tier" name="plan_tier"
+                                class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                            <option value="basic" @selected(old('plan_tier', $event->plan_tier) === 'basic')>Basic</option>
+                            <option value="premium" @selected(old('plan_tier', $event->plan_tier) === 'premium')>Premium</option>
+                        </select>
+                        <x-input-error :messages="$errors->get('plan_tier')" class="mt-2" />
                     </div>
 
                     <div class="flex items-center justify-end gap-3">
