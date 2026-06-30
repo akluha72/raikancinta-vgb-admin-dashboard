@@ -19,6 +19,7 @@ class GuestbookEntry extends Model
         'audio',
         'guest_message',
         'status',
+        'visitor_id',
     ];
 
     /**

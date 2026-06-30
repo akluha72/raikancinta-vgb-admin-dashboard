@@ -51,6 +51,9 @@ class GuestSubmissionController extends Controller
                     'audio' => $audioPath,
                     'photo' => $photoPath,
                     'guest_message' => $request->validated('guest_message'),
+                    // Optional per-device id for the distinct "Joined" count.
+                    // Already sanitized/truncated in StoreSubmissionRequest.
+                    'visitor_id' => $request->validated('visitor_id'),
                     // Moderation is disabled for now — submissions go live on
                     // arrival. The status column is retained so the
                     // pending/approved/binned workflow can be re-enabled later.
@@ -89,6 +92,14 @@ class GuestSubmissionController extends Controller
     {
         // Trust the detected extension over the client-supplied filename.
         $ext = $file->extension() ?: $file->getClientOriginalExtension();
+
+        // iOS records AAC-in-MP4, which finfo sniffs as video/mp4 -> guessed
+        // extension "mp4". The bytes are audio; store them as .m4a so the
+        // gallery's audio player picks them up correctly.
+        if ($kind === 'audio' && in_array(strtolower($ext), ['mp4', 'aac'], true)) {
+            $ext = 'm4a';
+        }
+
         $name = Str::uuid().'.'.$ext;
 
         return $file->storeAs("events/{$eventId}/{$kind}", $name, ['disk' => $disk]);

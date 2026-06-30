@@ -96,7 +96,34 @@ class GalleryController extends Controller
                 'current_page' => $entries->currentPage(),
                 'last_page' => $entries->lastPage(),
                 'total' => $entries->total(),
+                // Distinct participants. Counts each distinct visitor_id once,
+                // plus every null-id submission (can't dedupe those). Computed
+                // over the same set as `total` (all submissions — moderation is
+                // off) so the two stats stay consistent with `data`.
+                'joined_count' => $this->joinedCount($event),
             ],
         ]);
+    }
+
+    /**
+     * Distinct-participant count for the event's gallery.
+     *
+     * A participant is one distinct visitor_id; submissions with no visitor_id
+     * each count as a separate anonymous participant since they can't be
+     * deduped. Kept on the same submission set as paginatedSubmissions() above
+     * (all submissions, moderation off) so it stays consistent with `total`.
+     */
+    private function joinedCount(Event $event): int
+    {
+        $distinctVisitors = $event->entries()
+            ->whereNotNull('visitor_id')
+            ->distinct()
+            ->count('visitor_id');
+
+        $anonymousCount = $event->entries()
+            ->whereNull('visitor_id')
+            ->count();
+
+        return $distinctVisitors + $anonymousCount;
     }
 }
