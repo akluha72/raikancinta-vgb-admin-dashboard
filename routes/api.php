@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\GuestSubmissionController;
+use App\Http\Controllers\Api\LeadCaptureController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,6 +13,13 @@ use Illuminate\Support\Facades\Route;
 | 404. The client can never inject or override event_id; all scoping derives
 | from this lookup.
 */
+
+// Website lead capture — the raikancinta.com contact form posts here before
+// handing the visitor to WhatsApp. Origin is locked down by CORS. Throttled to
+// blunt spam/abuse; de-dup by phone lives in the controller.
+Route::post('/leads', [LeadCaptureController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('api.leads.store');
 
 // Guest submission — throttled to absorb live-event bursts without abuse.
 Route::post('/events/{event}/submissions', [GuestSubmissionController::class, 'store'])

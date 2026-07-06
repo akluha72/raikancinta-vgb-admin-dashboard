@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raikan Cinta — Lead Widget Demo</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      max-width:640px;margin:60px auto;padding:0 20px;color:#111827;line-height:1.6}
+    h1{font-size:22px}
+    code,pre{background:#f3f4f6;border-radius:6px;font-size:13px}
+    pre{padding:16px;overflow-x:auto}
+    code{padding:2px 5px}
+    .cta{display:inline-block;background:#25d366;color:#fff;text-decoration:none;
+      padding:12px 20px;border-radius:10px;font-weight:600;margin:20px 0}
+  </style>
+</head>
+<body>
+  <h1>Lead capture widget — demo</h1>
+  <p>Click the button. The form saves the lead to the dashboard, then redirects
+     to WhatsApp (if <code>WHATSAPP_NUMBER</code> is set).</p>
+
+  <a href="#" class="js-raikan-lead cta">💬 Chat on WhatsApp</a>
+
+  <h2>Embed snippet for raikancinta.com</h2>
+  <p>Add a trigger element and the script (adjust the domain to your dashboard):</p>
+  <pre>&lt;a href="#" class="js-raikan-lead"&gt;Chat on WhatsApp&lt;/a&gt;
+
+&lt;script
+  src="https://YOUR-DASHBOARD-DOMAIN/embed/lead-form.js"
+  data-api="https://YOUR-DASHBOARD-DOMAIN/api/leads"
+  data-trigger=".js-raikan-lead"
+  defer&gt;&lt;/script&gt;</pre>
+  <p>Remember to add raikancinta.com to <code>CORS_ALLOWED_ORIGINS</code> in the
+     dashboard's <code>.env</code>.</p>
+
+  <!-- Same-origin during local testing; served from /embed on the dashboard. -->
+  <script src="/embed/lead-form.js" data-api="/api/leads" data-trigger=".js-raikan-lead" defer></script>
+</body>
+</html>
