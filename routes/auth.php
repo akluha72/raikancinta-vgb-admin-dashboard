@@ -12,10 +12,9 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    // Public registration is disabled: this is a single-owner admin panel, and
+    // an open /register let anyone create an account with full admin access.
+    // Create owner accounts with `php artisan tinker` instead.
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
